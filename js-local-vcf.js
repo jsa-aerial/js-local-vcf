@@ -38,6 +38,33 @@
 // inflate.js (fetch and place or fetch remotely)
 // binary-vcf.js (this file)
 //
+//
+// There are two 'object' types with constructors:
+//
+// readTabixFile which takes a filespec and initializes a tabix
+// reader.  Provides methods
+//
+//   * getIndex - builds the index information
+//   * bin2Ranges - returns the chunk information for a [ref binid]
+//   * bin2Beg - returns first chunk of bin
+//   * bin2End - returns last chunk of bin
+//   * getChunks - returns all chunks for bins covering region in ref
+//
+// Details below
+//
+// readBinaryVCF which takes a tabix filespec and a BGZF VCF filespec
+// initializes a tabix reader and builds binary VCF reader.  Provides
+// methods
+//
+//   * getHeader - obtains and returns the VCF header lines
+//   * getRecords - obtains the data records in a reference region and
+//                  returns as a vector of strings to provided callback
+//   * getChunks - returns all chunks covered by region
+//
+// Details below
+//
+// Example:
+//
 // With files[0] == vcf file
 //      files[1] == tabix file
 //
