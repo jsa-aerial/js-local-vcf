@@ -8,33 +8,33 @@ Usage:
 
 Include the following libs:
 
-https://raw.github.com/vjeux/jDataView/master/src/jdataview.js
-https://raw.github.com/vjeux/jParser/master/src/jparser.js
-inflate.js (fetch and place or fetch remotely)
-binary-vcf.js (this file)
+* https://raw.github.com/vjeux/jDataView/master/src/jdataview.js
+* https://raw.github.com/vjeux/jParser/master/src/jparser.js
+* inflate.js (fetch and place or fetch remotely)
+* binary-vcf.js (this file)
 
 
 There are two 'object' types with constructors:
 
-readTabixFile which takes a filespec and initializes a tabix
+`readTabixFile` which takes a filespec and initializes a tabix
 reader.  Provides methods
 
-  * getIndex - builds the index information
-  * bin2Ranges - returns the chunk information for a [ref binid]
-  * bin2Beg - returns first chunk of bin
-  * bin2End - returns last chunk of bin
-  * getChunks - returns all chunks for bins covering region in ref
+  * `getIndex` - builds the index information
+  * `bin2Ranges` - returns the chunk information for a [ref binid]
+  * `bin2Beg` - returns first chunk of bin
+  * `bin2End` - returns last chunk of bin
+  * `getChunks` - returns all chunks for bins covering region in ref
 
 Details below
 
-readBinaryVCF which takes a tabix filespec and a BGZF VCF filespec
+`readBinaryVCF` which takes a tabix filespec and a BGZF VCF filespec
 initializes a tabix reader and builds binary VCF reader.  Provides
 methods
 
-  * getHeader - obtains and returns the VCF header lines
-  * getRecords - obtains the data records in a reference region and
+  * `getHeader` - obtains and returns the VCF header lines
+  * `getRecords` - obtains the data records in a reference region and
                  returns as a vector of strings to provided callback
-  * getChunks - returns all chunks covered by region
+  * `getChunks` - returns all chunks covered by region
 
 Details below
 
@@ -53,31 +53,36 @@ var chunks = vcfR.getChunks(11, 1000000, 1015808)
 
 ================== readTabixFile ===================
 
-Constructor for tabix reader and decoder.  tabixfile is a bgzipped
-tabix binary index file.
 
 ```javascript
 function readTabixFile(tabixFile) {
 ```
 
+Constructor for tabix reader and decoder.  tabixfile is a bgzipped
+tabix binary index file.
 
-Main function for a tabix reader.  Obtains and decodes the index
-and caches information on it used by other methods.  So, must be
-called before others.
 
 ```javascript
 readTabixFile.prototype.getIndex = function(cb)
 ```
 
+Main function for a tabix reader.  Obtains and decodes the index
+and caches information on it used by other methods.  So, must be
+called before others.
 
-// Converts a reference name to its tabix index.  References in vcf
-// processing always need to be by their index.  Requires that
-// getIndex has been run
 
 ```javascript
 readTabixFile.prototype.refName2Index = function(name)
 ```
 
+Converts a reference name to its tabix index.  References in vcf
+processing always need to be by their index.  Requires that
+`getIndex` has been run
+
+
+```javascript
+readBaiFile.prototype.bin2Ranges = function(ref, binid)
+```
 
 Takes a ref and binid and builds a return vector mapped from the
 chunk sequence of bin, where each element is a two element vector
@@ -91,57 +96,55 @@ Returns a vector [[[vfbeg, bobeg], [vfend, boend]], ...] where
 * vfend is the virtual file offset of ending bgzf block
 * boend is the offset of last byte in that block
 
-```javascript
-readBaiFile.prototype.bin2Ranges = function(ref, binid)
-```
-
-
-First chunk region of binid.
 
 ```javascript
 readBaiFile.prototype.bin2Beg = function(binid)
 ```
 
-Last chunk region of binid.
+First chunk region of binid.
+
 
 ```javascript
 readBaiFile.prototype.bin2End = function(binid)
 ```
 
+Last chunk region of binid.
 
-For a reference REF region defined by BEG and END return the set of
-chunks of all bins involved as a _flat_ vector of two element
-vectors, each defining a region of a bin.
 
 ```javascript
 readBaiFile.prototype.getChunks = function(ref, beg, end)
 ```
 
-
+For a reference REF region defined by BEG and END return the set of
+chunks of all bins involved as a _flat_ vector of two element
+vectors, each defining a region of a bin.
 
 
 ================== readBinaryVCF ===================
 
 
+```javascript
+function readBinaryVCF (tbxFile, vcfFile, cb)
+```
+
 Constructor for BGZF VCF reader and decoder.  tabixfile is a bgzipped
 tabix binary index file for VCFFILE, a BGZF encoded VCF file.  Inits
 and builds index and initializes the VCF reader.
 
-```javascript
-function readBinaryVCF (tbxFile, vcfFile, cb) {
-```
 
+```javascript
+readBinaryVCF.prototype.getHeader = function (cbfn)
+```
 
 Obtain and return the VCF header information as a vector of strings.
 Calls cbfn with this vector.  All header lines begin with a "#" and
 start as the first line of the file and stop at first line starting
 without a "#" in char pos 0.
 
-```javascript
-readBinaryVCF.prototype.getHeader =
-    function (cbfn) {
-```
 
+```javascript
+readBinaryVCF.prototype.getRecords = function (ref, beg, end, cbfn)
+```
 
 Main function for VCF reader.  For a record region defined by BEG ad
 END, obtains the set of bins and chunks covering the region, inflates
@@ -150,15 +153,10 @@ for each record) and filters these to ensure only those in the range
 are kept.  The resulting filtered vector of strings is returned by
 calling CBFN with the vector.
 
-```javascript
-readBinaryVCF.prototype.getRecords =
-    function (ref, beg, end, cbfn) {
-```
-
-
-Synonym for tabix getChunks.  Directly callable on a vcfReader.
 
 ```javascript
 readBinaryVCF.prototype.getChunks =
     function (ref, beg, end) {
 ```
+
+Synonym for tabix getChunks.  Directly callable on a vcfReader.
