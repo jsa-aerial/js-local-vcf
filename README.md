@@ -11,7 +11,12 @@ Include the following libs:
 * https://raw.github.com/vjeux/jDataView/master/src/jdataview.js
 * https://raw.github.com/vjeux/jParser/master/src/jparser.js
 * inflate.js (fetch and place or fetch remotely)
-* binary-vcf.js (this file)
+* pako_deflate.min.js - included in JSLibs
+* jsbgzf.js - included in JSLibs
+* js-bv-common.js - included in JSLibs
+* js-bv-sampling.js - included in JSLibs
+* js-iobio-common.js - included in JSLibs
+* js-local-vcf.js (this file)
 
 
 There are two 'object' types with constructors:
@@ -27,9 +32,9 @@ reader.  Provides methods
 
 Details below
 
-`readBinaryVCF` which takes a tabix filespec and a BGZF VCF filespec
-initializes a tabix reader and builds binary VCF reader.  Provides
-methods
+`readBinaryVCF` which takes a tabix filespec, a BGZF VCF filespec, and
+a user supplied callback function: initializes a tabix reader, builds
+binary VCF reader, calls user CB at finish.  Provides methods
 
   * `getHeader` - obtains and returns the VCF header lines
   * `getRecords` - obtains the data records in a reference region and
@@ -44,10 +49,13 @@ Example:
 With files[0] == vcf file
      files[1] == tabix file
 
-vcfR = new readBinaryVCF(files[1], files[0]);
 var x = undefined;
-vcfR.getRecords(11, 1000000, 1015808, function(rs){x = rs;});
-var chunks = vcfR.getChunks(11, 1000000, 1015808)
+var chunks = undefined;
+vcfR = new readBinaryVCF(files[1], files[0],
+  function(vcfR) {
+    vcfR.getRecords(11, 1000000, 1015808, function(rs){x = rs;});
+    chunks = vcfR.getChunks(11, 1000000, 1015808);
+  });
 ```
 
 
@@ -129,7 +137,8 @@ function readBinaryVCF (tbxFile, vcfFile, cb)
 
 Constructor for BGZF VCF reader and decoder.  tabixfile is a bgzipped
 tabix binary index file for VCFFILE, a BGZF encoded VCF file.  Inits
-and builds index and initializes the VCF reader.
+and builds index and initializes the VCF reader, then calls cb with
+the VCF reader. Returns VCF reader.
 
 
 ```javascript
