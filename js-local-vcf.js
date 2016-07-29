@@ -278,28 +278,55 @@ readTabixFile.prototype.refName2Index =
 // * boend is the offset of last byte in that block
 readTabixFile.prototype.bin2Ranges =
     function  (ref, binid) {
-        return bin2Ranges(this, ref, binid)
+        var res = [];
+        var bs = this.idxContent.indexseq[ref].binseq;
+        var cnkseq = bs[this.bhash[ref][binid]].chunkseq;
+
+        for (var i = 0; i < cnkseq.length; i++) {
+            var cnk = cnkseq[i];
+            var cnkBeg = cnk.cnk_beg.valueOf();
+            var cnkEnd = cnk.cnk_end.valueOf();
+            res.push([[rshift16(cnkBeg), low16(cnkBeg)],
+                      [rshift16(cnkEnd), low16(cnkEnd)]]);
+        };
+        return res;
     };
 
 // First chunk region of binid.
 readTabixFile.prototype.bin2Beg =
-    function (ref, binid) {
-        return bin2Beg(this, ref, binid);
+    function (binid) {
+        var range = bin2Range(binid);
+        return range[0];
     };
 
 // Last chunk region of binid.
 readTabixFile.prototype.bin2End =
-    function (ref, binid) {
-        return bin2End(thi, ref, binid);
+    function (binid) {
+        var range = bin2Range(binid);
+        return range[range.length-1];
     };
-
 
 // For a reference REF region defined by BEG and END return the set of
 // chunks of all bins involved as a _flat_ vector of two element
 // vectors, each defining a region of a bin.
 readTabixFile.prototype.getChunks =
     function (ref, beg, end) {
-        return getChunks(this, ref, beg, end);
+
+        var bids = reg2bins(beg, end+1).filter(
+            function(x){
+                return (this.bhash[ref][x] != undefined);
+            }, this);
+        var bcnks = bids.map(
+            function(x){
+                return this.bin2Ranges(ref, x);
+            }, this);
+        var cnks = bcnks.reduce(
+            function(V, ranges) {
+                ranges.forEach(function(item) {V.push(item);});
+                return V;
+            }, []);
+
+        return cnks;
     };
 
 
@@ -318,8 +345,10 @@ function readBinaryVCF (tbxFile, vcfFile, cb) {
     this.theFile = vcfFile;
     this.tbxR = r;
     this.vcfThis = this;
+    this.tbxR.vcfR = this;
 
-    r.getIndex(cb);
+    var tcb = function(_){cb.call(this, this)}
+    r.getIndex(tcb);
 }
 
 
