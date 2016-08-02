@@ -341,13 +341,14 @@ function readBinaryVCF (tbxFile, vcfFile, cb) {
 
     var cb = cb ? cb : function(){};
     var r = new readTabixFile(tbxFile);
+    var vcfThis = this;
 
     this.theFile = vcfFile;
     this.tbxR = r;
     this.vcfThis = this;
-    this.tbxR.vcfR = this;
+    this.tbxR.vcfR = vcfThis;
 
-    var tcb = function(_){cb.call(this, this)}
+    var tcb = function(_){cb.call(vcfThis, vcfThis)}
     r.getIndex(tcb);
 }
 
